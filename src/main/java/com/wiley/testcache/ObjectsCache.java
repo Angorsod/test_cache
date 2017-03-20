@@ -1,10 +1,10 @@
 package com.wiley.testcache;
 
-public interface ObjectsCache {
+public interface ObjectsCache<K, T> {
 
-	Object get(long id);
-	void put(long id, Object obj);
-	void invalidate(long id);
+	T get(K id);
+	void put(K id, T obj);
+	void invalidate(K id);
 	void clear();
 	int getCount();
 	

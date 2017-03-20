@@ -5,6 +5,8 @@ package com.wiley.testcache;
 
 import java.util.Random;
 
+import com.wiley.testcache.ObjectsCache.CacheStrategy;
+
 import junit.framework.TestCase;
 
 /**
@@ -63,27 +65,46 @@ public class ObjectsCacheMemoryTest extends TestCase {
 		CachedObject testObj;
 		ObjectsCache objCache = new ObjectsCacheMemoryImpl();
 		objCache.setMaxSize(10);
+		objCache.setStrategy(CacheStrategy.LRU);
+		Random rng = new Random();
 		// fill the cache
 		for (i = 0; i < objCache.getMaxSize(); i++) {
-			testObj = new CachedObject(i, "Alex" + i, 44);
-			objCache.put(i, testObj);
-			assertEquals(objCache.get(i), testObj);
-		}
-		// random read 100 times
-		Random rng = new Random();
-		for (i = 0; i < 100; i++) {
-			int id = rng.nextInt(objCache.getMaxSize());
-			try {
-				Thread.sleep(2);
-			} catch (Exception e) {}
-			assertNotNull(objCache.get(id));
-		}
-		for (i = objCache.getMaxSize() / 2 - 1; i >= 0; i--) {
-			int id = i + objCache.getMaxSize();
+			int id = rng.nextInt(100);
 			testObj = new CachedObject(id, "Alex" + id, 44);
 			objCache.put(id, testObj);
 			assertEquals(objCache.get(id), testObj);
 		}
+		// random read 100 times
+		for (i = 0; i < 100; i++) {
+			// int id = rng.nextInt(objCache.getMaxSize());
+			int id = rng.nextInt(100);
+			try {
+				Thread.sleep(2);
+			} catch (Exception e) {}
+			objCache.get(id);
+			// assertNotNull(objCache.get(id));
+		}
+		for (i = objCache.getMaxSize() / 2 - 1; i >= 0; i--) {
+			// int id = i + objCache.getMaxSize();
+			int id = rng.nextInt(100);
+			testObj = new CachedObject(id, "Alex" + id, 44);
+			objCache.put(id, testObj);
+			assertEquals(objCache.get(id), testObj);
+		}
+		for (i = 0; i < 100; i++) {
+			int id = rng.nextInt(100);
+			try {
+				Thread.sleep(2);
+			} catch (Exception e) {}
+			objCache.get(id);
+		}
+		for (i = 0; i < 3; i++) {
+			int id = rng.nextInt(100);
+			testObj = new CachedObject(id, "Alex" + id, 44);
+			objCache.put(id, testObj);
+			assertEquals(objCache.get(id), testObj);
+		}
+		((ObjectsCacheMemoryImpl)objCache).printAllCached();
 		assertEquals(objCache.getMaxSize(), objCache.getCount());
 		objCache.clear();
 	}

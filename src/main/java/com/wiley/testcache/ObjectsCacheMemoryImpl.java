@@ -6,11 +6,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ObjectsCacheMemoryImpl implements ObjectsCache {
+public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 
 //	private final static ObjectsCacheMemoryImpl instance = new ObjectsCacheMemoryImpl();
 
-	private Map<Long, CachedObject> cache;
+	private Map<K, T> cache;
 	private ObjectsCache.CacheStrategy strategy;
 	private int maxSize;
 	
@@ -78,17 +78,17 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 	/**
 	 * Access map is used to an implement different cache strategies
 	 */
-	private class Access{
-		long id;
+	private class Access<I> {
+		I id;
 		long time;
 		int count;
-		public Access(long id) {
+		public Access(I id) {
 			// time = System.currentTimeMillis();
 			count = 0;
 			this.id = id;
 		}
 	}
-	private Map<Long, Access> access;
+	private Map<K, Access<K> > access;
 	
 	
 	// private ObjectsCacheMemoryImpl() {
@@ -106,25 +106,28 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 //	}
 	
 	@Override
-	public Object get(long id) {
+	public T get(K id) {
+		T rv = null;
 		cacheLock.getReadLock();
-		accessLock.getWriteLock();
-		Access a = access.get(id);
-		if (a == null) {
-			a = new Access(id);
-			access.put(id, a);
+		if (cache.containsKey(id)) {
+			rv = cache.get(id);
+			accessLock.getWriteLock();
+			Access<K> a = access.get(id);
+			if (a == null) {
+				a = new Access<K>(id);
+				access.put(id, a);
+			}
+			a.time = System.currentTimeMillis();
+			a.count++;
+			access.replace(id, a);
+			accessLock.releaseLock();
 		}
-		a.time = System.currentTimeMillis();
-		a.count++;
-		access.replace(id, a);
-		accessLock.releaseLock();
-		Object rv = cache.get(id);
 		cacheLock.releaseLock();
 		return rv;
 	}
 
 	@Override
-	public void put(long id, Object obj) {
+	public void put(K id, T obj) {
 		cacheLock.getWriteLock();
 		accessLock.getWriteLock();
 		int free = maxSize - cache.size() - 1;
@@ -132,13 +135,26 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 			free = -free;
 			clearCache(free);
 		}
+		if (cache.containsKey(id)) {
+			Access<K> a = access.get(id);
+			if (a == null) {
+				a = new Access<K>(id);
+				access.put(id, a);
+			}
+			a.time = System.currentTimeMillis();
+			a.count++;
+			access.replace(id, a);
+			cache.replace(id, obj);
+		} else {
+			access.put(id, new Access<K>(id));
+			cache.put(id, obj);
+		}
 		accessLock.releaseLock();
-		cache.put(id, (CachedObject)obj);
 		cacheLock.releaseLock();
 	}
 
 	@Override
-	public void invalidate(long id) {
+	public void invalidate(K id) {
 		cacheLock.getWriteLock();
 		accessLock.getWriteLock();
 		access.remove(id);
@@ -201,10 +217,10 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 	
 	private void clearUsingLFU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
-			Collection<Access> ac = access.values();
-			Access lfu = Collections.min(ac, new Comparator<Access>() {
+			Collection<Access<K> > ac = access.values();
+			Access<K> lfu = Collections.min(ac, new Comparator<Access<K> >() {
 			    @Override
-			    public int compare(Access first, Access second) {
+			    public int compare(Access<K> first, Access<K> second) {
 			        if (first.count > second.count)
 			            return 1;
 			        else if (first.count < second.count)
@@ -212,7 +228,7 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 			        return 0;
 			    }
 			});
-			long id = lfu.id;
+			K id = lfu.id;
 			cache.remove(id);
 			access.remove(id);
 		}
@@ -220,9 +236,9 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 
 	private void clearUsingLRU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
-			Access lru = Collections.min(access.values(), new Comparator<Access>() {
+			Access<K> lru = Collections.min(access.values(), new Comparator<Access<K> >() {
 			    @Override
-			    public int compare(Access first, Access second) {
+			    public int compare(Access<K> first, Access<K> second) {
 			        if (first.time > second.time)
 			            return 1;
 			        else if (first.time < second.time)
@@ -230,7 +246,7 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 			        return 0;
 			    }
 			});
-			long id = lru.id;
+			K id = lru.id;
 			cache.remove(id);
 			access.remove(id);
 		}
@@ -238,9 +254,9 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 
 	private void clearUsingMRU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
-			Access mru = Collections.max(access.values(), new Comparator<Access>() {
+			Access<K> mru = Collections.max(access.values(), new Comparator<Access<K> >() {
 			    @Override
-			    public int compare(Access first, Access second) {
+			    public int compare(Access<K> first, Access<K> second) {
 			        if (first.time > second.time)
 			            return 1;
 			        else if (first.time < second.time)
@@ -248,10 +264,15 @@ public class ObjectsCacheMemoryImpl implements ObjectsCache {
 			        return 0;
 			    }
 			});
-			long id = mru.id;
+			K id = mru.id;
 			cache.remove(id);
 			access.remove(id);
 		}
 	}
 
+	void printAllCached() {
+		for (T c_obj : cache.values()) {
+			System.out.println(c_obj.toString());
+		}
+	}
 }
