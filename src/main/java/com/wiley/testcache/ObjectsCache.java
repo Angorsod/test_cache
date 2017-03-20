@@ -6,6 +6,7 @@ public interface ObjectsCache {
 	void put(long id, Object obj);
 	void invalidate(long id);
 	void clear();
+	int getCount();
 	
 	enum CacheStrategy {
 		LRU, // Least recently used
