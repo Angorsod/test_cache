@@ -5,6 +5,7 @@ public interface ObjectsCache {
 	Object get(long id);
 	void put(long id, Object obj);
 	void invalidate(long id);
+	void clear();
 	
 	enum CacheStrategy {
 		LRU, // Least recently used
@@ -12,8 +13,8 @@ public interface ObjectsCache {
 		LFU  // Least Frequently Used
 	}
 	
-	void setStrategy(byte level, CacheStrategy strategy);
-	CacheStrategy getStrategy(byte level);
-	void setMaxSize(byte level, int maxSize);
-	int getMaxSize(byte level);
+	void setStrategy(CacheStrategy strategy);
+	CacheStrategy getStrategy();
+	void setMaxSize(int maxSize);
+	int getMaxSize();
 }
