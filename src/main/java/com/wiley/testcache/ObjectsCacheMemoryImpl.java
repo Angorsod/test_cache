@@ -130,11 +130,6 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 	public void put(K id, T obj) {
 		cacheLock.getWriteLock();
 		accessLock.getWriteLock();
-		int free = maxSize - cache.size() - 1;
-		if (free < 0) {
-			free = -free;
-			clearCache(free);
-		}
 		if (cache.containsKey(id)) {
 			Access<K> a = access.get(id);
 			if (a == null) {
@@ -146,6 +141,11 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 			access.replace(id, a);
 			cache.replace(id, obj);
 		} else {
+			int free = maxSize - cache.size() - 1;
+			if (free < 0) {
+				free = -free;
+				clearCache(free);
+			}
 			access.put(id, new Access<K>(id));
 			cache.put(id, obj);
 		}
