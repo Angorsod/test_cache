@@ -9,11 +9,12 @@ public class ObjectsCacheLevel2Test extends TestCase {
 
 	public ObjectsCacheLevel2Test(String name) {
 		super(name);
-		testLvl2Cache = new ObjectsCacheLevel2<>(testLvl1Cache);
 	}
 
 	protected void setUp() throws Exception {
 		super.setUp();
+		testLvl1Cache = new ObjectsCacheMemoryImpl<>();
+		testLvl2Cache = new ObjectsCacheLevel2<>(testLvl1Cache);
 	}
 
 	protected void tearDown() throws Exception {
@@ -28,28 +29,28 @@ public class ObjectsCacheLevel2Test extends TestCase {
 		testLvl2Cache.clear();
 	}
 
-	public void testPut() {
-		fail("Not yet implemented");
-	}
-
-	public void testInvalidate() {
-		fail("Not yet implemented");
-	}
-
-	public void testClear() {
-		fail("Not yet implemented");
-	}
-
-	public void testGetCount() {
-		fail("Not yet implemented");
-	}
-
-	public void testSetStrategy() {
-		fail("Not yet implemented");
-	}
-
-	public void testSetMaxSize() {
-		fail("Not yet implemented");
-	}
+//	public void testPut() {
+//		fail("Not yet implemented");
+//	}
+//
+//	public void testInvalidate() {
+//		fail("Not yet implemented");
+//	}
+//
+//	public void testClear() {
+//		fail("Not yet implemented");
+//	}
+//
+//	public void testGetCount() {
+//		fail("Not yet implemented");
+//	}
+//
+//	public void testSetStrategy() {
+//		fail("Not yet implemented");
+//	}
+//
+//	public void testSetMaxSize() {
+//		fail("Not yet implemented");
+//	}
 
 }
