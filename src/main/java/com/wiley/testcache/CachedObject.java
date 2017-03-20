@@ -15,20 +15,37 @@ public class CachedObject implements Serializable {
 	private static int count = 0;
 	
 	private final long id;
+	private final String name;
+	private final int age;
 	
-	public CachedObject() {
+	public CachedObject(long id, String name, int age) {
 		synchronized (this) {
-			id = count++;
+			count++;
 		}
+		this.id = id;
+		this.name = name;
+		this.age = age;
+	}
+
+	public static int getCount() {
+		return count;
 	}
 
 	public long getId() {
 		return id;
 	}
 
+	public String getName() {
+		return name;
+	}
+
+	public int getAge() {
+		return age;
+	}
+
 	@Override
 	public String toString() {
-		return "CachedObject [id=" + id + "]";
+		return "CachedObject [id=" + id + ", name=" + name + ", age=" + age + "]";
 	}
 
 	@Override
