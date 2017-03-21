@@ -21,5 +21,11 @@
       <version>3.8.1</version>
       <scope>test</scope>
     </dependency>
+	<!-- https://mvnrepository.com/artifact/berkeleydb/je -->
+	<dependency>
+	    <groupId>berkeleydb</groupId>
+	    <artifactId>je</artifactId>
+	    <version>3.2.76</version>
+	</dependency>
   </dependencies>
 </project>
