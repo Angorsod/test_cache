@@ -27,6 +27,15 @@ public class ObjectsCacheFileImpl<K, T> implements ObjectsCache<K, T> {
 		this.strategy = strategy;
 	}
 
+	public void close() {
+		try {
+			db.close();
+		} catch (Exception e) {
+			System.err.println("Exception during database close: ");
+            e.printStackTrace();
+		}
+	}
+
 	private class ReadWorker implements TransactionWorker
     {
 		private final K key;

@@ -1,11 +1,12 @@
 package com.wiley.testcache;
 
+import com.wiley.testcache.ObjectsCache.CacheStrategy;
+
 import junit.framework.TestCase;
 
 public class ObjectsCacheFileTest extends TestCase {
 
-//	private ObjectsCacheMemoryImpl<Long, CachedObject> testLvl1Cache;
-//	private ObjectsCacheFileImpl<Long, CachedObject> testLvl2Cache;
+	private ObjectsCacheFileImpl<Long, CachedObject> fileCache;
 
 	public ObjectsCacheFileTest(String name) {
 		super(name);
@@ -13,30 +14,40 @@ public class ObjectsCacheFileTest extends TestCase {
 
 	protected void setUp() throws Exception {
 		super.setUp();
-//		testLvl1Cache = new ObjectsCacheMemoryImpl<>();
-//		testLvl2Cache = new ObjectsCacheFileImpl<>(testLvl1Cache);
+		fileCache = new ObjectsCacheFileImpl<>(1000, CacheStrategy.LRU);
 	}
 
 	protected void tearDown() throws Exception {
 		super.tearDown();
+		fileCache.close();
 	}
 
 	public void testGet() {
-//		CachedObject testObj = new CachedObject(1, "Alex", 44);
-//		assertNull(testLvl2Cache.get(1L));
-//		testLvl2Cache.put(1L, testObj);
-//		assertEquals(testLvl2Cache.get(1L), testObj);
-//		testLvl2Cache.clear();
+		CachedObject testObj = new CachedObject(1, "Alex", 44);
+		assertNull(fileCache.get(1L));
+		fileCache.put(1L, testObj);
+		assertEquals(fileCache.get(1L), testObj);
+		fileCache.clear();
 	}
 
-//	public void testPut() {
-//		fail("Not yet implemented");
-//	}
-//
-//	public void testInvalidate() {
-//		fail("Not yet implemented");
-//	}
-//
+	public void testPut() {
+		CachedObject testObj = new CachedObject(1, "Alex", 44);
+		assertNull(fileCache.get(1L));
+		fileCache.put(1L, testObj);
+		assertEquals(fileCache.get(1L), testObj);
+		fileCache.clear();
+	}
+
+	public void testInvalidate() {
+		CachedObject testObj = new CachedObject(1, "Alex", 44);
+		assertNull(fileCache.get(1L));
+		fileCache.put(1L, testObj);
+		assertEquals(fileCache.get(1L), testObj);
+		fileCache.invalidate(1L);
+		assertNull(fileCache.get(1L));
+		fileCache.clear();
+	}
+
 //	public void testClear() {
 //		fail("Not yet implemented");
 //	}
