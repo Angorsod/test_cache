@@ -15,45 +15,57 @@ import junit.framework.TestCase;
  */
 public class ObjectsCacheMemoryTest extends TestCase {
 
+	private ObjectsCacheMemoryImpl<Long, CachedObject> memCache;
+
+	public ObjectsCacheMemoryTest(String name) {
+		super(name);
+	}
+
+	protected void setUp() throws Exception {
+		super.setUp();
+		memCache = new ObjectsCacheMemoryImpl<>(null, 10, CacheStrategy.LRU);
+	}
+
+	protected void tearDown() throws Exception {
+		super.tearDown();
+	}
+
 	/**
 	 * Test method for {@link com.wiley.testcache.ObjectsCacheMemoryImpl#get(long)}.
 	 */
 	public void testGet() {
-		// ObjectsCache objCache = ObjectsCacheMemoryImpl.getInstance();
-		ObjectsCache<Long, CachedObject> objCache = new ObjectsCacheMemoryImpl<>();
+		// ObjectsCache memCache = ObjectsCacheMemoryImpl.getInstance();
 		CachedObject testObj = new CachedObject(1, "Alex", 44);
-		assertNull(objCache.get(1L));
-		objCache.put(1L, testObj);
-		assertEquals(objCache.get(1L), testObj);
-		objCache.clear();
+		assertNull(memCache.get(1L));
+		memCache.put(1L, testObj);
+		assertEquals(memCache.get(1L), testObj);
+		memCache.clear();
 	}
 
 	/**
 	 * Test method for {@link com.wiley.testcache.ObjectsCacheMemoryImpl#put(long, java.lang.Object)}.
 	 */
 	public void testPut() {
-		// ObjectsCache objCache = ObjectsCacheMemoryImpl.getInstance();
-		ObjectsCache<Long, CachedObject> objCache = new ObjectsCacheMemoryImpl<>();
+		// ObjectsCache memCache = ObjectsCacheMemoryImpl.getInstance();
 		CachedObject testObj = new CachedObject(1, "Alex", 44);
-		assertNull(objCache.get(1L));
-		objCache.put(1L, testObj);
-		assertEquals(objCache.get(1L), testObj);
-		objCache.clear();
+		assertNull(memCache.get(1L));
+		memCache.put(1L, testObj);
+		assertEquals(memCache.get(1L), testObj);
+		memCache.clear();
 	}
 
 	/**
 	 * Test method for {@link com.wiley.testcache.ObjectsCacheMemoryImpl#invalidate(long)}.
 	 */
 	public void testInvalidate() {
-		// ObjectsCache objCache = ObjectsCacheMemoryImpl.getInstance();
-		ObjectsCache<Long, CachedObject> objCache = new ObjectsCacheMemoryImpl<>();
+		// ObjectsCache memCache = ObjectsCacheMemoryImpl.getInstance();
 		CachedObject testObj = new CachedObject(1, "Alex", 44);
-		assertNull(objCache.get(1L));
-		objCache.put(1L, testObj);
-		assertEquals(objCache.get(1L), testObj);
-		objCache.invalidate(1L);
-		assertNull(objCache.get(1L));
-		objCache.clear();
+		assertNull(memCache.get(1L));
+		memCache.put(1L, testObj);
+		assertEquals(memCache.get(1L), testObj);
+		memCache.invalidate(1L);
+		assertNull(memCache.get(1L));
+		memCache.clear();
 	}
 
 
@@ -63,50 +75,49 @@ public class ObjectsCacheMemoryTest extends TestCase {
 	public void testSetMaxSize() {
 		int i;
 		CachedObject testObj;
-		ObjectsCache<Long, CachedObject> objCache = new ObjectsCacheMemoryImpl<>();
-		objCache.setMaxSize(10);
-		objCache.setStrategy(CacheStrategy.LRU);
+		memCache.setMaxSize(10);
+		memCache.setStrategy(CacheStrategy.LRU);
 		Random rng = new Random();
 		// fill the cache
-		for (i = 0; i < objCache.getMaxSize(); i++) {
+		for (i = 0; i < memCache.getMaxSize(); i++) {
 			int id = rng.nextInt(100);
 			testObj = new CachedObject(id, "Alex" + id, 44);
-			objCache.put((long)id, testObj);
-			assertEquals(objCache.get((long)id), testObj);
+			memCache.put((long)id, testObj);
+			assertEquals(memCache.get((long)id), testObj);
 		}
 		// random read 100 times
 		for (i = 0; i < 100; i++) {
-			// int id = rng.nextInt(objCache.getMaxSize());
+			// int id = rng.nextInt(memCache.getMaxSize());
 			int id = rng.nextInt(100);
 			try {
 				Thread.sleep(2);
 			} catch (Exception e) {}
-			objCache.get((long)id);
-			// assertNotNull(objCache.get(id));
+			memCache.get((long)id);
+			// assertNotNull(memCache.get(id));
 		}
-		for (i = objCache.getMaxSize() / 2 - 1; i >= 0; i--) {
-			// int id = i + objCache.getMaxSize();
+		for (i = memCache.getMaxSize() / 2 - 1; i >= 0; i--) {
+			// int id = i + memCache.getMaxSize();
 			int id = rng.nextInt(100);
 			testObj = new CachedObject(id, "Alex" + id, 44);
-			objCache.put((long)id, testObj);
-			assertEquals(objCache.get((long)id), testObj);
+			memCache.put((long)id, testObj);
+			assertEquals(memCache.get((long)id), testObj);
 		}
 		for (i = 0; i < 100; i++) {
 			int id = rng.nextInt(100);
 			try {
 				Thread.sleep(2);
 			} catch (Exception e) {}
-			objCache.get((long)id);
+			memCache.get((long)id);
 		}
 		for (i = 0; i < 3; i++) {
 			int id = rng.nextInt(100);
 			testObj = new CachedObject(id, "Alex" + id, 44);
-			objCache.put((long)id, testObj);
-			assertEquals(objCache.get((long)id), testObj);
+			memCache.put((long)id, testObj);
+			assertEquals(memCache.get((long)id), testObj);
 		}
-		((ObjectsCacheMemoryImpl<Long, CachedObject>)objCache).printAllCached();
-		assertEquals(objCache.getMaxSize(), objCache.getCount());
-		objCache.clear();
+		((ObjectsCacheMemoryImpl<Long, CachedObject>)memCache).printAllCached();
+		assertEquals(memCache.getMaxSize(), memCache.getCount());
+		memCache.clear();
 	}
 
 //	/**

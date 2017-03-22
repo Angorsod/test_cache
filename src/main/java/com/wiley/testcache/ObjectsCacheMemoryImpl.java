@@ -10,15 +10,15 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 
 //	private final static ObjectsCacheMemoryImpl instance = new ObjectsCacheMemoryImpl();
 
-	private Map<K, T> cache;
+	private final Map<K, T> cache;
 	private ObjectsCache.CacheStrategy strategy;
 	private int maxSize;
 	
 	/**
 	 * Read/write lock
 	 */
-	private RWLock cacheLock;
-	private RWLock accessLock;
+	private final RWLock cacheLock;
+	private final RWLock accessLock;
 	
 	/**
 	 * Access map is used to an implement different cache strategies
@@ -28,20 +28,22 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 		long time;
 		int count;
 		public Access(I id) {
-			// time = System.currentTimeMillis();
+			// time = System.nanoTime();
 			count = 0;
 			this.id = id;
 		}
 	}
-	private Map<K, Access<K> > access;
+	private final Map<K, Access<K> > access;
 	
+	private final ObjectsCache<K, T> nextLevelCache;
 	
 	// private ObjectsCacheMemoryImpl() {
-	public ObjectsCacheMemoryImpl() {
-		maxSize = 10;
+	public ObjectsCacheMemoryImpl(ObjectsCache<K, T> fileCache, int maxSize, CacheStrategy strategy) {
+		this.nextLevelCache = fileCache;
+		this.maxSize = maxSize;
 		cache = new HashMap<>(maxSize);
 		access = new HashMap<>(maxSize);
-		strategy = ObjectsCache.CacheStrategy.LFU;
+		this.strategy = strategy;
 		cacheLock = new RWLock();
 		accessLock = new RWLock();
 	}
@@ -62,12 +64,23 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 				a = new Access<K>(id);
 				access.put(id, a);
 			}
-			a.time = System.currentTimeMillis();
+			a.time = System.nanoTime();
 			a.count++;
 			access.replace(id, a);
 			accessLock.releaseLock();
+			cacheLock.releaseLock();
 		}
-		cacheLock.releaseLock();
+		else if (nextLevelCache != null) {
+			cacheLock.releaseLock();
+			rv = nextLevelCache.get(id);
+			if (rv != null) {
+				nextLevelCache.invalidate(id);
+				this.put(id, rv);
+			}
+		}
+		else {
+			cacheLock.releaseLock();
+		}
 		return rv;
 	}
 
@@ -81,7 +94,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 				a = new Access<K>(id);
 				access.put(id, a);
 			}
-			a.time = System.currentTimeMillis();
+			a.time = System.nanoTime();
 			a.count++;
 			access.replace(id, a);
 			cache.replace(id, obj);
@@ -159,7 +172,16 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 				break;
 		}
 	}
-	
+
+	private void removeElement(K id) {
+		T obj = cache.get(id);
+		cache.remove(id);
+		access.remove(id);
+		if (nextLevelCache != null) {
+			nextLevelCache.put(id, obj);
+		}
+	}
+
 	private void clearUsingLFU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
 			Collection<Access<K> > ac = access.values();
@@ -174,8 +196,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 			    }
 			});
 			K id = lfu.id;
-			cache.remove(id);
-			access.remove(id);
+			removeElement(id);
 		}
 	}
 
@@ -192,8 +213,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 			    }
 			});
 			K id = lru.id;
-			cache.remove(id);
-			access.remove(id);
+			removeElement(id);
 		}
 	}
 
@@ -210,8 +230,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 			    }
 			});
 			K id = mru.id;
-			cache.remove(id);
-			access.remove(id);
+			removeElement(id);
 		}
 	}
 
