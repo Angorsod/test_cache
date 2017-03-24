@@ -202,7 +202,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 
 	private void clearUsingLRU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
-			Access<K> lru = Collections.min(access.values(), new Comparator<Access<K> >() {
+			Access<K> lru = Collections.max(access.values(), new Comparator<Access<K> >() {
 			    @Override
 			    public int compare(Access<K> first, Access<K> second) {
 			        if (first.time > second.time)
@@ -219,7 +219,7 @@ public class ObjectsCacheMemoryImpl<K, T> implements ObjectsCache<K, T> {
 
 	private void clearUsingMRU(int removeCount) {
 		for (int i = removeCount; i > 0; i--) {
-			Access<K> mru = Collections.max(access.values(), new Comparator<Access<K> >() {
+			Access<K> mru = Collections.min(access.values(), new Comparator<Access<K> >() {
 			    @Override
 			    public int compare(Access<K> first, Access<K> second) {
 			        if (first.time > second.time)
